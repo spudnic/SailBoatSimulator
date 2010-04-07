@@ -1,0 +1,151 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0104 
+header_name {.h} 
+code_name {.cxx}
+class gui {open
+} {
+  Function {gui()} {open
+  } {
+    Fl_Window form {
+      label window open
+      xywh {4 30 655 600} type Double resizable
+      code0 {\#include <FL/fl_draw.H>} visible
+    } {
+      Fl_Box gl_window {
+        label gl_window
+        xywh {5 5 645 425} box EMBOSSED_FRAME labeltype NO_LABEL
+        code0 {\#include "gl_window.h"}
+        class CGL_Window
+      }
+      Fl_Group {} {
+        label Camera open
+        xywh {10 450 80 100} box ENGRAVED_FRAME
+      } {
+        Fl_Slider x {
+          label x
+          callback {gl_window->camera(o->value(),'x');
+gl_window->redraw();}
+          xywh {20 460 15 70} minimum -90 maximum 90 step 0.1
+        }
+        Fl_Slider y {
+          label y
+          callback {gl_window->camera(o->value(),'y');
+gl_window->redraw();}
+          xywh {40 460 15 70} minimum -50 maximum 0 step 0.1 value -25
+        }
+        Fl_Slider z {
+          label z
+          callback {gl_window->camera(o->value(),'z');
+gl_window->redraw();}
+          xywh {60 460 15 70} minimum -90 maximum 90 step 0.1
+        }
+      }
+      Fl_Button quit {
+        label quit
+        callback {gl_window->quit_cb();}
+        xywh {525 555 125 35} labelsize 12
+      }
+      Fl_Value_Slider h {
+        label {h value}
+        callback {gl_window->adjust(o->value(),'k');
+gl_window->redraw();}
+        xywh {440 440 80 15} type Horizontal align 4 maximum 0.5 step 0.001 value 0.04
+      }
+      Fl_Button animate {
+        label Run
+        callback {//gl_window->animate_go();
+gl_window->redraw();}
+        xywh {590 440 60 25} type Toggle
+      }
+      Fl_Group {} {
+        label {Sail boat} open
+        xywh {95 450 80 145} box ENGRAVED_FRAME
+      } {
+        Fl_Slider sheet {
+          label sheet
+          callback {gl_window->adjust(o->value(),'s');
+gl_window->redraw();} selected
+          xywh {125 465 15 75} align 1 minimum -20 maximum 20 step 1
+        }
+        Fl_Slider rudder {
+          label rudder
+          callback {gl_window->adjust(o->value(),'r');
+gl_window->redraw();}
+          xywh {100 545 65 15} type Horizontal minimum -25 maximum 25 step 1
+        }
+        Fl_Button reset_ruder {
+          label straight
+          callback {gl_window->adjust(0,'r');
+rudder->value(0);
+gl_window->redraw();}
+          xywh {105 575 50 15} labelsize 10
+        }
+      }
+      Fl_Group {} {
+        label Wind open
+        xywh {180 450 75 145} box ENGRAVED_FRAME
+      } {
+        Fl_Slider wind_mag {
+          label magnitude
+          callback {gl_window->adjust(o->value(),'W');
+gl_window->redraw();}
+          xywh {210 465 15 75} align 1 minimum 0.2 maximum 20 step 1
+        }
+      }
+      Fl_Group {} {
+        label Wave open
+        xywh {265 450 85 75} box ENGRAVED_FRAME
+      } {
+        Fl_Slider height {
+          label Height
+          callback {gl_window->adjust(o->value(),'h');
+gl_window->redraw();}
+          xywh {270 465 75 15} type Horizontal align 1 minimum 0.5 maximum 2 step 0.0001 value 1
+        }
+        Fl_Slider length {
+          label length
+          callback {gl_window->adjust(o->value(),'l');
+gl_window->redraw();}
+          xywh {270 495 75 15} type Horizontal align 1 minimum 0.1 maximum 0.5 step 0.001 value 0.5
+        }
+      }
+      Fl_Button restart_b {
+        label restart
+        callback {gl_window->restart();
+gl_window->redraw();}
+        xywh {595 470 50 25}
+      }
+      Fl_Button weather_b {
+        label weather
+        callback {gl_window->weather();
+gl_window->redraw();}
+        xywh {360 560 70 25}
+      }
+      Fl_Button down_wind {
+        label {down wind}
+        callback {gl_window->down_wind();
+gl_window->redraw();}
+        xywh {440 560 75 25}
+      }
+      Fl_Button tack {
+        label tack
+        callback {gl_window->tack();
+gl_window->redraw();}
+        xywh {400 530 70 25}
+      }
+      Fl_Button reach {
+        label reach
+        callback {gl_window->reach();
+gl_window->redraw();}
+        xywh {400 495 75 25}
+      }
+    }
+    code {filename[0] = '\\0';} {}
+  }
+  Function {show()} {open
+  } {
+    code {form->show();
+gl_window->show();} {}
+  }
+  decl {char filename[1024];} {}
+} 
