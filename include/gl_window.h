@@ -15,7 +15,7 @@
 #include <FL/Fl.H>
 #include <FL/gl.h>
 #include <GL/glu.h>
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
