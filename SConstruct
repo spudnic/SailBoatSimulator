@@ -101,13 +101,19 @@ optlevel = int(env['OPT_LEVEL'])
 static_link = int(env['STATIC_LINK'])
 arch = env['ARCH']
 """
-
-
-
-
-env.AppendUnique(CPPPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/include"])
-env.AppendUnique(LIBPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/lib"])
-env.AppendUnique(LIBS = ["fltk", "fltk_gl", "glut", "GL", "GLU", "m", "X11"])
+#checking for fltk and opengl libs 
+LIBS = ["fltk", "fltk_gl", "glut", "GL", "GLU", "m", "X11"]
+conf = env.Configure( conf_dir="#conf_cache", clean=False, help=False)
+missing_flag = False
+for lib in LIBS:
+	if 0 == conf.CheckLib(library=lib):
+		print "Missing library (%s)" %(lib)
+		missing_flag = True
+        
+if missing_flag:
+	env.AppendUnique(CPPPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/include"]) 
+	env.AppendUnique(LIBPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/lib"]) 
+	env.AppendUnique(LIBS)
 
 
 env.SConscript(dirs=['src'], duplicate=0, build_dir = env.GetBuildDir(), exports = {'env':env})
