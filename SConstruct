@@ -3,6 +3,7 @@ import string, glob
 
 #Scons module imports
 from SCons.Script.SConscript import SConsEnvironment
+import pdb
 
 PLATFORMS = {'darwin':'osx','win32':'windows','posix':'linux'}
 ARCH_LIST = ['x86','x86_amd64']
@@ -29,7 +30,7 @@ DEFAULT_DEBUG = 0
 DEFAULT_DOC = 0
 DEFAULT_THREADS = 1
 DEFAULT_MSVS_VERSION = '8.0'
-
+DEFAULT_ALTLIBPATH= "/usr/local/lib"
 DEFAULT_COMPILER = 'scons'
 
 OS = ARGUMENTS.get("OS", Platform())
@@ -85,13 +86,24 @@ def CustomEnv(env):
 
 env = Environment(tools=["default"], CPPPATH=['#include'], MSVS_IGNORE_IDE_PATHS=1, ARCH=DEFAULT_ARCH,)
 
+
+opts = Variables(ARGUMENTS)
+opts.AddVariables(
+    EnumVariable('DEBUG', "Debug mode", DEFAULT_DEBUG, allowed_values=('0','1')),
+    PathVariable('ALTLIBPATH', "Paths to use when searching for libs", DEFAULT_ALTLIBPATH,),
+)
+
+
 env['OPT_LEVEL']                    = int(ARGUMENTS.get("OPT", DEFAULT_OPT_LEVEL))
 env['THREADS']                      = int(ARGUMENTS.get("THREADS", DEFAULT_THREADS))
 env['STATIC_LINK']                  = int(ARGUMENTS.get("STATIC_LINK", DEFAULT_STATIC_LINK))
 env['OS']                           = str(ARGUMENTS.get("OS", OS))
 env['DEBUG']                        = int(ARGUMENTS.get("DEBUG", DEFAULT_DEBUG))
+env['ALTLIBPATH']                   = str(ARGUMENTS.get("ALTLIBPATH", DEFAULT_ALTLIBPATH))
 
 env.Tool(CustomEnv)
+
+Help(opts.GenerateHelpText(env))
 
 """
 platform = str(env['MY_PLATFORM'])
@@ -101,19 +113,48 @@ optlevel = int(env['OPT_LEVEL'])
 static_link = int(env['STATIC_LINK'])
 arch = env['ARCH']
 """
-#checking for fltk and opengl libs 
 LIBS = ["fltk", "fltk_gl", "glut", "GL", "GLU", "m", "X11"]
-conf = env.Configure( conf_dir="#conf_cache", clean=False, help=False)
-missing_flag = False
-for lib in LIBS:
-	if 0 == conf.CheckLib(library=lib):
-		print "Missing library (%s)" %(lib)
-		missing_flag = True
-        
+def testing_libs(env, libpath=None, libs=None, unique=None):
+    conf = env.Configure( help=False)
+    #conf = env.Configure( conf_dir="#conf_cache_%s" %(unique), log_file="#conf_%s.log" %(unique),clean=False, help=False)
+    missing_flag = False
+    if not libpath == None:
+        conf.env.AppendUnique(LIBPATH=libpath)
+    
+    conf.env.AppendUnique(LIBS=libs)
+    for lib in libs:
+        if 0 == conf.CheckLib(library=lib):
+            missing_flag = True
+
+    env = conf.Finish()
+    
+    return missing_flag, env
+
+
+#checking for fltk and opengl libs 
+#---------------------------
+missing_flag, env = testing_libs(env, libs=LIBS, unique='system')
+
+#---------------------------
+
+
 if missing_flag:
-	env.AppendUnique(CPPPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/include"]) 
-	env.AppendUnique(LIBPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/lib"]) 
-	env.AppendUnique(LIBS)
+    imdlibpath = "/imd/tool/app/fltk/fltk-1.1.10/linux64/lib"
+    print "\nChecking with IMD lib paths(%s)" %(imdlibpath)
+    missing_flag, env = testing_libs(env, libs=LIBS, libpath=imdlibpath, unique="imd")
+
+if missing_flag:
+    if env['ALTLIBPATH'] == '/usr/local/lib':
+        print "\nChecking user default alturnate lib path(%s)" %(env['ALTLIBPATH'])
+    else:
+        print "\nChecking user specified lib path(%s)" %(env['ALTLIBPATH'])
+    missing_flag, env = testing_libs(env, libs=LIBS, libpath = [env['ALTLIBPATH']], unique="cmdline") 
+
+if missing_flag:
+    print "Unable to find one or more libs.  Try adding path to libs as command line argument LIBPATH=PATH_TO_LIB"
+    exit(1)
+
+env.AppendUnique(CPPPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/include"]) 
 
 
 env.SConscript(dirs=['src'], duplicate=0, build_dir = env.GetBuildDir(), exports = {'env':env})
