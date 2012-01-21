@@ -1,5 +1,5 @@
 #Python module globals
-import string, glob
+import string, glob, platform
 
 #Scons module imports
 from SCons.Script.SConscript import SConsEnvironment
@@ -34,14 +34,14 @@ DEFAULT_ALTLIBPATH= "/usr/local/lib"
 DEFAULT_COMPILER = 'scons'
 
 OS = ARGUMENTS.get("OS", Platform())
-platform = PLATFORMS.get(str(OS))
+platform_name = PLATFORMS.get(str(OS))
 
 #for different defaults on different platforms
 dictType= type({})
 if type(DEFAULT_ARCH) == dictType:
-    DEFAULT_ARCH= DEFAULT_ARCH.get(platform)
+    DEFAULT_ARCH= DEFAULT_ARCH.get(platform_name)
 if type(DEFAULT_STATIC_LINK) == dictType:
-    DEFAULT_STATIC_LINK= DEFAULT_STATIC_LINK.get(platform)
+    DEFAULT_STATIC_LINK= DEFAULT_STATIC_LINK.get(platform_name)
 
 
 def CustomEnv(env):
@@ -57,7 +57,7 @@ def CustomEnv(env):
     
     def GetBuildDir(env, cached=True):
         #platform_dir = env['MY_PLATFORM']
-        platform_dir = "RHEL5"
+        platform_dir = "UBUNTU"
         arch_dir = env['ARCH']    
         thread_dir = int(env['THREADS']) and 'multi' or 'single'
         debug_dir = int(env['DEBUG']) and 'debug' or 'release'
@@ -105,14 +105,6 @@ env.Tool(CustomEnv)
 
 Help(opts.GenerateHelpText(env))
 
-"""
-platform = str(env['MY_PLATFORM'])
-threads = int(env['THREADS'])
-debug = int(env['DEBUG'])
-optlevel = int(env['OPT_LEVEL'])
-static_link = int(env['STATIC_LINK'])
-arch = env['ARCH']
-"""
 LIBS = ["fltk", "fltk_gl", "glut", "GL", "GLU", "m", "X11"]
 def testing_libs(env, libpath=None, libs=None, unique=None):
     conf = env.Configure( help=False)
@@ -134,14 +126,7 @@ def testing_libs(env, libpath=None, libs=None, unique=None):
 #checking for fltk and opengl libs 
 #---------------------------
 missing_flag, env = testing_libs(env, libs=LIBS, unique='system')
-
 #---------------------------
-
-
-if missing_flag:
-    imdlibpath = "/imd/tool/app/fltk/fltk-1.1.10/linux64/lib"
-    print "\nChecking with IMD lib paths(%s)" %(imdlibpath)
-    missing_flag, env = testing_libs(env, libs=LIBS, libpath=imdlibpath, unique="imd")
 
 if missing_flag:
     if env['ALTLIBPATH'] == '/usr/local/lib':
@@ -152,6 +137,9 @@ if missing_flag:
 
 if missing_flag:
     print "Unable to find one or more libs.  Try adding path to libs as command line argument LIBPATH=PATH_TO_LIB"
+    #TODO explain how to install the required libs
+    if 'Ubuntu' in platform.linux_distribution()[0]:
+       print "Try installing them with aptitude install libfltk-dev, libglut3-dev"
     exit(1)
 
 env.AppendUnique(CPPPATH = ["/imd/tool/app/fltk/fltk-1.1.10/linux64/include"]) 
